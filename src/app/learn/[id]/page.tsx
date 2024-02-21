@@ -10,7 +10,7 @@ const Learn = (props: any) => {
   const [dictData, setData] = useState<any>([]);
 
   const getData = async () => {
-    const res = await fetch(`http://localhost:3000/${props.params.id}.json`);
+    const res = await fetch(`/${props.params.id}.json`);
     if (!res.ok) {
       throw new Error("Failed to fetch data");
     }
