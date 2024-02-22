@@ -40,6 +40,7 @@ const Learn = (props: ILearnProps) => {
   };
 
   const specializeWord = (word: string): string[] => {
+    console.log(word, "project");
     const result: string[] = [word];
     // 假设现在只考虑一些简单的单词转换规则
     if (word?.endsWith("ize")) {
@@ -50,7 +51,6 @@ const Learn = (props: ILearnProps) => {
     return result;
   };
 
-  console.log(specializeWord("specialize"), "specializeWord");
   useEffect(() => {
     const getData = async () => {
       setLoading(true);
@@ -117,7 +117,7 @@ const Learn = (props: ILearnProps) => {
                           <div>
                             <ClozeTest
                               text={v.sContent}
-                              blanks={specializeWord(v?.headWord)}
+                              blanks={specializeWord(item?.headWord)}
                               onSubmission={(e) => {
                                 nextPage();
                               }}
