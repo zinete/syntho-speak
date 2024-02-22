@@ -2,7 +2,7 @@
  * @ Author: ZhengHui
  * @ Create Time: 2024-02-21 15:22:40
  * @ Modified by: ZhengHui
- * @ Modified time: 2024-02-21 15:37:13
+ * @ Modified time: 2024-02-22 10:16:38
  * @ Description: 分页
  */
 
@@ -24,7 +24,6 @@ type UsePaginationOptions = {
 function usePagination<T>(data: T[], options: UsePaginationOptions = {}) {
   const { initialPage = 1, pageSize = 10 } = options;
 
-  console.log(data, "usePaginationusePagination32");
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(
     Math.ceil(data.length / pageSize)

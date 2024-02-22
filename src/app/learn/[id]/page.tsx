@@ -1,38 +1,82 @@
 "use client";
 
-import { WordCard } from "@/components";
+import { WordCard, ClozeTest } from "@/components";
+
 import usePagination from "@/hook/usePagination";
+import { Route } from "next";
 import Image from "next/image";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { NextRouter, useRouter } from "next/router";
+import { useEffect, useMemo, useState } from "react";
 
-const Learn = (props: any) => {
-  const [dictData, setData] = useState<any>([]);
-
-  const getData = async () => {
-    const res = await fetch(`/${props.params.id}.json`);
-    if (!res.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    return await res?.json();
+interface ILearnProps {
+  params: {
+    id: string;
   };
+}
+const Learn = (props: ILearnProps) => {
+  const [dictData, setData] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
+  const localcurrentPage = localStorage.getItem("currentPage");
 
-  useEffect(() => {
-    if (props.params.id) {
-      getData().then((data) => setData(data));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.params.id]);
-
+  // 保存进度
+  const saveHistory = (page: string) => {
+    localStorage.setItem("currentPage", page);
+  };
+  // 数据分页
   const { currentPage, totalPages, pageSize, totalItems, data, goToPage } =
     usePagination(dictData, {
       pageSize: 1,
     });
 
-  console.log(data, "sampleData1");
+  // 上一页
+  const prevPage = () => {
+    goToPage(currentPage - 1);
+    saveHistory(String(currentPage - 1));
+  };
+  // 下一页
+  const nextPage = () => {
+    goToPage(currentPage + 1);
+    saveHistory(String(currentPage + 1));
+  };
+
+  const specializeWord = (word: string): string[] => {
+    const result: string[] = [word];
+    // 假设现在只考虑一些简单的单词转换规则
+    if (word?.endsWith("ize")) {
+      // 转换为 specialized 形式
+      result.push(word.slice(0, -3) + "ized");
+    }
+    // 在这里可以添加其他转换规则
+    return result;
+  };
+
+  console.log(specializeWord("specialize"), "specializeWord");
+  useEffect(() => {
+    const getData = async () => {
+      setLoading(true);
+      const res = await fetch(`/${props.params.id}.json`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      return await res?.json();
+    };
+    if (props.params.id) {
+      getData().then((data) => {
+        setLoading(false);
+        setData(data);
+      });
+    }
+  }, [props.params.id]);
+
+  useEffect(() => {
+    if (localcurrentPage) {
+      goToPage(Number(localcurrentPage));
+    }
+  }, [goToPage, localcurrentPage]);
+
   return (
     <div className="flex flex-row h-screen w-screen justify-center">
-      {data.length ? (
+      {data.length && !loading ? (
         <div className="mt-10 w-[60%]">
           {/* Render your component using the paginated data */}
           {data.map((item: any) => (
@@ -66,28 +110,38 @@ const Learn = (props: any) => {
                   {item?.content?.word?.content?.sentence?.sentences?.map(
                     (v: any) => {
                       return (
-                        <div key={v.sContent}>
-                          <p>
-                            {v.sContent}
-                            <br />
-                            {v.sCn}
-                          </p>
+                        <div
+                          key={v.sContent}
+                          className="border-b-[1px] text-xl border-dashed border-green-400 pb-1 mb-4"
+                        >
+                          <div>
+                            <ClozeTest
+                              text={v.sContent}
+                              blanks={specializeWord(v?.headWord)}
+                              onSubmission={(e) => {
+                                nextPage();
+                              }}
+                            />
+                          </div>
+                          <span>{v.sCn}</span>
                         </div>
                       );
                     }
                   )}
                 </div>
               </div>
-              <div className="h-[380px] p-2 border shadow-md rounded-sm mb-3 overflow-auto">
+              {/* <div className="p-2 border shadow-md rounded-sm mb-3 overflow-auto">
                 {JSON.stringify(item?.content)}
-              </div>
+              </div> */}
             </div>
           ))}
 
           {/* Render pagination controls */}
           <div className="text-sm">
             <button
-              onClick={() => goToPage(currentPage - 1)}
+              onClick={() => {
+                prevPage();
+              }}
               disabled={currentPage === 1}
             >
               上一页
@@ -96,7 +150,9 @@ const Learn = (props: any) => {
               {currentPage} / {totalPages}{" "}
             </span>
             <button
-              onClick={() => goToPage(currentPage + 1)}
+              onClick={() => {
+                nextPage();
+              }}
               disabled={currentPage === totalPages}
             >
               下一页
